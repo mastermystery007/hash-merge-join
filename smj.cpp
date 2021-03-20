@@ -8,6 +8,7 @@ int col_index =1;
 int curr_scratch_file = 0;
 int r_files = 0;
 int s_files = 0;
+int RPB = 100;
 
 class Tuple 
 {
@@ -101,7 +102,7 @@ void create_initial_runs( char* input_file, int run_size,int r_s)
         
         getline(in, line);
         //cout<<" line "<<line<<"\n";
-        if(line.size()==0){moreinput=false;break;}
+        if(line.size()==0){moreinput=false;}//TODO
 
         //get all strings in a line
         vector<string> temp;
@@ -133,8 +134,8 @@ void create_initial_runs( char* input_file, int run_size,int r_s)
             }
             
             string n_a= addend.substr(0,addend.size()-2)+"\n";
+            if(n_a != "  \n"){t<<n_a;}
             
-            t<<n_a;
         }
         t.close();
         curr_scratch_file++;
@@ -179,7 +180,8 @@ void fill_priority_queue_and_merge(char* output_file)
     vector<ifstream> in_s;
     vector<int> taken1(r_files,0);
     vector<int> taken2(s_files,0);
-    ofstream out_fd;
+    // ofstream out;
+    // out.open(output_file,std::ios_base::app);
 
     // FILE* in_r[r_files]; 
 
@@ -196,7 +198,7 @@ void fill_priority_queue_and_merge(char* output_file)
         in_s.push_back(ifstream(fileName));
     } 
 
-    cout<<"cp1";
+
 
     // FINAL OUTPUT FILE 
     FILE* out = openFile(output_file, "wa"); 
@@ -208,20 +210,19 @@ void fill_priority_queue_and_merge(char* output_file)
     for (i = 0;i<r_files; i++)
     { 
         
-        for(int z=0;z<5;z++)
+        for(int z=0;z<5;z++)//todo
         {
             getline(in_r[i], line);
             
             if(!line.empty())
             {
-                //cout<<"my data is "<<line<<"\n";
+                cout<<"pushing  "<<line<<" into QR "<<"\n";
                 Tuple* tt = new Tuple(line,i);
                 QR.push(*tt); 
             }
             else
             {
                 r_files--;
-                cout<<"i am empty"<<"\n";
                 break;
             }
         }
@@ -241,6 +242,7 @@ void fill_priority_queue_and_merge(char* output_file)
             if(!line2.empty())
             {
                 //cout<<"my data is "<<line2<<"\n";
+                cout<<"pushing  "<<line2<<" into QS "<<"\n";
                 Tuple* tt = new Tuple(line2,j);
                 QS.push(*tt); 
             }
@@ -255,8 +257,8 @@ void fill_priority_queue_and_merge(char* output_file)
 
     } 
     
-    cout<<"size of QR is "<<QR.size()<<"\n";
-    cout<<"size of QS is "<<QS.size()<<"\n";
+    // cout<<"size of QR is "<<QR.size()<<"\n";
+    // cout<<"size of QS is "<<QS.size()<<"\n";
 
     while(!QR.empty() && !QS.empty())
     {
@@ -269,6 +271,9 @@ void fill_priority_queue_and_merge(char* output_file)
         
         string elem2t = QS.top().t;
         cout<<"second is "<<elem2t<<"\n";
+
+        if(elem1t == "" ){QR.pop();continue;}
+        if( elem2t == ""){QS.pop();continue;}
         
         for(int i=0;i<sizes1.size();i++)
         {
@@ -288,12 +293,19 @@ void fill_priority_queue_and_merge(char* output_file)
         // cout<<"first string = "<<r_temp.t<<"\n";
         // cout<<"second string = "<<s_temp.t<<"\n";
 
+
         if(elem1[1] > elem2[0])
         {
             int fn = QS.top().index;
             taken2[fn]++;
             cout<<"first is greater\n";
             QS.pop();
+            string ml;
+            getline(in_s[fn], ml);
+
+            cout<<"pushing "<<ml<<"into QS"; 
+            Tuple* tt = new Tuple(ml,fn);
+            QS.push(*tt); 
             //s_temp = QS.top();
             
         }
@@ -301,10 +313,18 @@ void fill_priority_queue_and_merge(char* output_file)
         {
             int fn = QR.top().index;
             taken1[fn]++;
+            QR.pop();
+            string ml;
+            getline(in_r[fn], ml);
+
+            cout<<"pushing "<<ml<<"into QR"; 
+            Tuple* tt = new Tuple(ml,fn);
+            QR.push(*tt);
 
             cout<<"second is greter\n";
-            QR.pop();           
-            //r_temp = QR.top();
+            //append fron ==
+                       
+           // r_temp = QR.top();
         }
         else if(elem1[1] == elem2[0])
         {
@@ -331,7 +351,7 @@ void fill_priority_queue_and_merge(char* output_file)
                 if(left_match == match)
                 {
                     string toput = QR.top().t+"\n";
-                    fputs(toput.c_str(),out);
+                    //fputs(toput.c_str(),out);
                     cout<<QR.top().t<<"\n";
                     int filenum = QR.top().index;
                     taken1[filenum]++;
@@ -354,9 +374,10 @@ void fill_priority_queue_and_merge(char* output_file)
                             }
                             else
                             {
-                                filenum++;
+                                //filenum++;
                                 r_files--;
                                 cout<<"i am empty"<<"\n";
+                                break;
                             }
 
                         }
@@ -386,7 +407,7 @@ void fill_priority_queue_and_merge(char* output_file)
                 if(right_match == match)
                 {
                     string toput = QS.top().t+"\n";
-                    fputs(toput.c_str(),out);                    
+                    //fputs(toput.c_str(),out);                    
                     cout<<QS.top().t<<"\n";
                     int filenum = QS.top().index;
                     taken2[filenum]++;
@@ -409,7 +430,7 @@ void fill_priority_queue_and_merge(char* output_file)
                             }
                             else
                             {
-                                filenum++;
+                                //filenum++;
                                 s_files--;
                                 cout<<"i am empty"<<"\n";
                                 break;
@@ -422,8 +443,29 @@ void fill_priority_queue_and_merge(char* output_file)
                 }
                 else{con2 = false;}
             }
-            cout<<"size of rv is "<<rv.size()<<"\n";
-            cout<<"size of sv is "<<sv.size()<<"\n";
+            for (int i=0;i<rv.size();i++)
+            {
+                string one = rv[i].t;
+                //one = one + "  ";
+                //fputs((one+"\n").c_str(),out);
+                for(int j=0;j<sv.size();j++)
+                {
+                    string two = sv[j].t;
+                    vector<string> temp;
+                    for(int s=0;s<sizes2.size();s++)
+                    {
+                        string token = two.substr(0,sizes2[s]);
+                        temp.push_back(token);
+                        two.erase(0,sizes2[i]+2);
+                    }
+                    // string full = ;
+                    string full = one+"  "+temp[0]+"  "+temp[1]+"\n";
+                    cout<<"full is "<<full<<"\n";
+                    fputs((full).c_str(),out);
+                }
+            }
+            // cout<<"size of rv is "<<rv.size()<<"\n";
+            // cout<<"size of sv is "<<sv.size()<<"\n";
 
         }
 
@@ -453,7 +495,7 @@ int main()
     create_initial_runs(ifs, 10,1) ;
     s_files = curr_scratch_file;
 
-    fill_priority_queue_and_merge("out");
+    fill_priority_queue_and_merge("outsmj");
 
     //fill_priority_queue();
     return 0;
